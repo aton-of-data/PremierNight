@@ -1,0 +1,1 @@
+export { FilmDetailScreen } from './FilmDetailScreen';
