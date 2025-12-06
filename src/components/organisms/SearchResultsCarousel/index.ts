@@ -1,0 +1,1 @@
+export { SearchResultsCarousel } from './SearchResultsCarousel';

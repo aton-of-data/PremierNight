@@ -1,0 +1,1 @@
+export { FilmDetailEmptyState } from './FilmDetailEmptyState';

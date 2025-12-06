@@ -1,0 +1,1 @@
+export { PopularCarousel } from './PopularCarousel';

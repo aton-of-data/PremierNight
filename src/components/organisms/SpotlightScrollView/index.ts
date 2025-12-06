@@ -1,0 +1,1 @@
+export { SpotlightScrollView } from './SpotlightScrollView';
