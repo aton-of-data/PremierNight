@@ -9,6 +9,7 @@ Premiere Night is a sophisticated mobile application that enables users to disco
 ### Core Concept
 
 The application serves as a premium film discovery platform where users can:
+
 - Browse curated film collections (Now Playing, Popular)
 - Search for films in real-time
 - View comprehensive film details
@@ -52,26 +53,24 @@ The application serves as a premium film discovery platform where users can:
 
 ## 🏗️ Architecture
 
-### Architecture Overview
-
 Premiere Night follows a **layered architecture** with clear separation of concerns:
 
 ```mermaid
 graph TB
     subgraph Presentation["🎨 Presentation Layer"]
-        Screens["Screens<br/>(SpotlightHome, FilmDetail, Watchlist)"]
-        Organisms["Organisms<br/>(FilmCarousel, FilmHeader, etc.)"]
-        Molecules["Molecules<br/>(FilmCard, SearchBar, etc.)"]
-        Atoms["Atoms<br/>(Text, Button, Image, etc.)"]
+        Screens["Screens"]
+        Organisms["Organisms"]
+        Molecules["Molecules"]
+        Atoms["Atoms"]
         
         Screens --> Organisms
         Organisms --> Molecules
         Molecules --> Atoms
     end
     
-    subgraph StateMgmt["⚙️ State Management Layer"]
+    subgraph StateMgmt["⚙️ State Management"]
         RTKQuery["RTK Query<br/>(tmdbApi, watchlistApi)"]
-        ReduxSlices["Redux Slices<br/>(spotlightHomeSlice)"]
+        ReduxSlices["Redux Slices<br/>(UI State)"]
         Store["Redux Store"]
         
         RTKQuery --> Store
@@ -79,56 +78,22 @@ graph TB
     end
     
     subgraph DataLayer["💾 Data Layer"]
-        TMDB["TMDb API<br/>(External Service)"]
-        AsyncStorage["AsyncStorage<br/>(Local Persistence)"]
-        Cache["Cache Manager<br/>(Multi-layer Cache)"]
+        TMDB["TMDb API"]
+        AsyncStorage["AsyncStorage"]
+        Cache["Cache Manager"]
     end
     
-    Presentation -->|useGetXQuery<br/>useAppDispatch<br/>useAppSelector| StateMgmt
-    StateMgmt -->|baseQuery<br/>with cache| DataLayer
-    DataLayer -->|HTTP Requests| TMDB
-    DataLayer -->|Read/Write| AsyncStorage
-    DataLayer -->|Cache Operations| Cache
+    Presentation -->|useGetXQuery<br/>useAppDispatch| StateMgmt
+    StateMgmt -->|baseQuery| DataLayer
+    DataLayer --> TMDB
+    DataLayer --> AsyncStorage
     
     style Presentation fill:#e1f5ff
     style StateMgmt fill:#fff4e1
     style DataLayer fill:#e8f5e9
-    style Store fill:#ffebee
 ```
 
-### Layer Interaction Flow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Component as Component<br/>(Screen/Organism)
-    participant RTKQuery as RTK Query<br/>/ Redux Slice
-    participant Cache as Cache Layer<br/>(AsyncStorage)
-    participant API as TMDb API<br/>/ Local Store
-    participant UI as Updated UI
-    
-    User->>Component: User Action
-    Component->>RTKQuery: useGetXQuery()<br/>useAppDispatch()
-    RTKQuery->>Cache: Check Cache<br/>(baseQuery with cache)
-    
-    alt Cache Hit
-        Cache-->>RTKQuery: Return Cached Data
-        RTKQuery-->>Component: Data Available
-        Component-->>UI: Re-render with Data
-    else Cache Miss
-        Cache->>API: Request Data
-        API-->>Cache: Response Data
-        Cache->>Cache: Update Cache
-        Cache-->>RTKQuery: Return Data
-        RTKQuery->>RTKQuery: Update State
-        RTKQuery-->>Component: Data Available
-        Component-->>UI: Re-render with Data
-    end
-    
-    UI-->>User: Updated Interface
-```
-
-## 🎨 Design System & Architecture
+## 🎨 Design System
 
 ### Atomic Design Pattern
 
@@ -136,76 +101,36 @@ The application follows **Atomic Design** principles for component organization:
 
 ```mermaid
 graph TD
-    subgraph Atoms["⚛️ Atoms - Basic Building Blocks"]
+    subgraph Atoms["⚛️ Atoms"]
         Text["Text"]
         Button["Button"]
         Image["Image"]
         Card["Card"]
-        SkeletonBox["SkeletonBox"]
     end
     
-    subgraph Molecules["🧪 Molecules - Simple Combinations"]
+    subgraph Molecules["🧪 Molecules"]
         FilmCard["FilmCard"]
-        FilmPoster["FilmPoster"]
-        GenreTag["GenreTag"]
         SearchBar["SearchBar"]
-        NavHeader["NavigationHeader"]
         WatchlistBtn["WatchlistButton"]
-        ErrorState["ErrorState"]
     end
     
-    subgraph Organisms["🔬 Organisms - Complex Components"]
+    subgraph Organisms["🔬 Organisms"]
         FilmCarousel["FilmCarousel"]
         FilmHeader["FilmHeader"]
-        FilmSynopsis["FilmSynopsis"]
-        FilmDetailContent["FilmDetailContent"]
-        SearchResults["SearchResultsCarousel"]
-        SpotlightScroll["SpotlightScrollView"]
         WatchlistList["WatchlistList"]
-        WatchlistItem["WatchlistItem"]
     end
     
-    subgraph Screens["📱 Screens - Full Pages"]
+    subgraph Screens["📱 Screens"]
         SpotlightHome["SpotlightHomeScreen"]
         FilmDetail["FilmDetailScreen"]
         Watchlist["WatchlistScreen"]
     end
     
-    %% Atoms to Molecules
     FilmCard --> Text
     FilmCard --> Image
     FilmCard --> Card
-    FilmPoster --> Image
-    FilmPoster --> Card
-    GenreTag --> Text
-    GenreTag --> Card
-    SearchBar --> Text
-    SearchBar --> Button
-    NavHeader --> Text
-    NavHeader --> Button
-    WatchlistBtn --> Button
-    ErrorState --> Text
-    ErrorState --> Button
-    
-    %% Molecules to Organisms
     FilmCarousel --> FilmCard
-    FilmCarousel --> FilmPoster
-    FilmHeader --> FilmPoster
-    FilmHeader --> GenreTag
-    FilmHeader --> WatchlistBtn
-    FilmSynopsis --> Text
-    FilmDetailContent --> FilmHeader
-    FilmDetailContent --> FilmSynopsis
-    SearchResults --> FilmCard
-    SpotlightScroll --> FilmCarousel
-    WatchlistList --> WatchlistItem
-    WatchlistItem --> FilmCard
-    
-    %% Organisms to Screens
-    SpotlightHome --> SearchBar
-    SpotlightHome --> SpotlightScroll
-    FilmDetail --> FilmDetailContent
-    Watchlist --> WatchlistList
+    SpotlightHome --> FilmCarousel
     
     style Atoms fill:#e3f2fd
     style Molecules fill:#f3e5f5
@@ -247,7 +172,7 @@ The app uses a centralized design system with tokens:
 - **Redux Slices for UI State**: Local component state (search query, UI flags)
 - **No ViewModel Layer**: Components use RTK Query hooks directly for simplicity
 
-**Implementation**:
+**Implementation Example**:
 
 ```typescript
 // RTK Query API Slice
@@ -282,89 +207,7 @@ export const spotlightHomeSlice = createSlice({
 3. **Client-Side Search Fallback**: Searches cached data if API fails
 
 **Cache Flow**:
-
-```mermaid
-sequenceDiagram
-    participant Component
-    participant RTKQuery as RTK Query<br/>(In-Memory)
-    participant BaseQuery as baseQueryWithCache
-    participant AsyncStorage as AsyncStorage<br/>(Persistent)
-    participant TMDB as TMDb API
-    participant ClientSearch as Client-Side<br/>Search Fallback
-    
-    Component->>RTKQuery: useGetXQuery()
-    RTKQuery->>RTKQuery: Check In-Memory Cache
-    
-    alt In-Memory Cache Hit
-        RTKQuery-->>Component: Return Cached Data
-    else In-Memory Cache Miss
-        RTKQuery->>BaseQuery: Execute Query
-        BaseQuery->>AsyncStorage: Check Persistent Cache
-        
-        alt Persistent Cache Hit
-            AsyncStorage-->>BaseQuery: Return Cached Data
-            BaseQuery-->>RTKQuery: Return Data
-            RTKQuery->>RTKQuery: Update In-Memory Cache
-            RTKQuery-->>Component: Return Data
-        else Persistent Cache Miss
-            BaseQuery->>TMDB: API Request
-            
-            alt API Success
-                TMDB-->>BaseQuery: Response Data
-                BaseQuery->>AsyncStorage: Save to Cache
-                BaseQuery->>RTKQuery: Return Data
-                RTKQuery->>RTKQuery: Update In-Memory Cache
-                RTKQuery-->>Component: Return Data
-            else API Failure (Search Query)
-                BaseQuery->>ClientSearch: Fallback to Client Search
-                ClientSearch->>AsyncStorage: Search Cached Films
-                AsyncStorage-->>ClientSearch: Cached Results
-                ClientSearch-->>BaseQuery: Return Results
-                BaseQuery->>AsyncStorage: Save to Cache
-                BaseQuery-->>RTKQuery: Return Data
-                RTKQuery-->>Component: Return Data
-            end
-        end
-    end
-```
-
-### Data Flow Architecture
-
-```mermaid
-flowchart TB
-    subgraph ComponentLayer["📱 Component Layer"]
-        Screen["Screen<br/>(SpotlightHomeScreen, etc.)"]
-        Organism["Organism<br/>(FilmCarousel, etc.)"]
-        
-        Screen --> Organism
-    end
-    
-    subgraph StateLayer["⚙️ State Management Layer"]
-        Store["Redux Store"]
-        RTKQuery["RTK Query<br/>tmdbApi<br/>watchlistApi"]
-        ReduxSlice["Redux Slices<br/>spotlightHomeSlice"]
-        
-        RTKQuery --> Store
-        ReduxSlice --> Store
-    end
-    
-    subgraph DataLayer["💾 Data Layer"]
-        TMDB["TMDb API<br/>(External)"]
-        AsyncStorage["AsyncStorage<br/>(Local)"]
-        Cache["Cache Manager"]
-    end
-    
-    ComponentLayer -->|useGetXQuery()<br/>useAppDispatch()<br/>useAppSelector()| StateLayer
-    StateLayer -->|baseQuery<br/>with cache| DataLayer
-    DataLayer -->|HTTP Requests| TMDB
-    DataLayer -->|Read/Write| AsyncStorage
-    DataLayer -->|Cache Operations| Cache
-    
-    style ComponentLayer fill:#e1f5ff
-    style StateLayer fill:#fff4e1
-    style DataLayer fill:#e8f5e9
-    style Store fill:#ffebee
-```
+- Component calls RTK Query hook → Checks in-memory cache → Falls back to AsyncStorage → Makes API request if needed → Updates both caches
 
 ### Navigation Architecture
 
@@ -374,38 +217,6 @@ flowchart TB
 - **Tab Navigator**: Bottom tabs for main sections (Spotlight, Watchlist)
 - **Deep Linking**: Custom URL scheme and universal links support
 
-**Navigation Structure**:
-
-```mermaid
-graph TD
-    Root["RootNavigator<br/>(Stack Navigator)"]
-    
-    HomeTabs["HomeTabs<br/>(Tab Navigator)"]
-    FilmDetail["FilmDetail<br/>(Stack Screen)"]
-    
-    Home["Home Tab<br/>SpotlightHomeScreen"]
-    Watchlist["Watchlist Tab<br/>WatchlistScreen"]
-    
-    Root --> HomeTabs
-    Root --> FilmDetail
-    
-    HomeTabs --> Home
-    HomeTabs --> Watchlist
-    
-    Home -.->|Navigate| FilmDetail
-    Watchlist -.->|Navigate| FilmDetail
-    FilmDetail -.->|Go Back| HomeTabs
-    
-    DeepLink["Deep Link<br/>premiere://film/:filmId"] -.->|Resolve| FilmDetail
-    
-    style Root fill:#e3f2fd
-    style HomeTabs fill:#f3e5f5
-    style FilmDetail fill:#fff3e0
-    style Home fill:#e8f5e9
-    style Watchlist fill:#e8f5e9
-    style DeepLink fill:#ffebee
-```
-
 ### Persistence Strategy
 
 **AsyncStorage** for local data persistence:
@@ -414,152 +225,7 @@ graph TD
 - **Cache**: Film data cached in AsyncStorage with versioning and TTL
 - **Storage Abstraction**: Centralized storage service for consistency
 
-**Persistence Flow**:
-
-```mermaid
-flowchart TD
-    Start([User Action]) --> Action{Action Type}
-    
-    Action -->|Add to Watchlist| AddFlow[Add Film to Watchlist]
-    Action -->|Remove from Watchlist| RemoveFlow[Remove Film from Watchlist]
-    Action -->|View Watchlist| ViewFlow[Load Watchlist]
-    
-    AddFlow --> Mutation[useToggleFilmInWatchlistMutation]
-    RemoveFlow --> Mutation
-    ViewFlow --> Query[useGetWatchlistQuery]
-    
-    Mutation --> WatchlistAPI[watchlistApi<br/>RTK Query]
-    Query --> WatchlistAPI
-    
-    WatchlistAPI --> BaseQuery[baseQueryWithStorage]
-    BaseQuery --> Storage[AsyncStorage<br/>@premiere_night:watchlist]
-    
-    Storage -->|Read/Write| Data[(Film[] Array)]
-    
-    WatchlistAPI --> Invalidate[Invalidate Tags<br/>['Watchlist']]
-    Invalidate --> Refetch[Auto Refetch<br/>Related Queries]
-    Refetch --> Update[Update UI State]
-    Update --> End([UI Updated])
-    
-    style AddFlow fill:#e8f5e9
-    style RemoveFlow fill:#ffebee
-    style ViewFlow fill:#e3f2fd
-    style Storage fill:#fff3e0
-    style Data fill:#f3e5f5
-```
-
 ## 📂 Project Structure
-
-### Component Dependency Graph
-
-```mermaid
-graph TB
-    subgraph Screens["📱 Screens"]
-        SpotlightHome["SpotlightHomeScreen"]
-        FilmDetail["FilmDetailScreen"]
-        Watchlist["WatchlistScreen"]
-    end
-    
-    subgraph Organisms["🔬 Organisms"]
-        SpotlightScroll["SpotlightScrollView"]
-        SearchResults["SearchResultsCarousel"]
-        FilmCarousel["FilmCarousel"]
-        FilmDetailContent["FilmDetailContent"]
-        WatchlistList["WatchlistList"]
-    end
-    
-    subgraph Molecules["🧪 Molecules"]
-        SearchBar["SearchBar"]
-        FilmCard["FilmCard"]
-        FilmPoster["FilmPoster"]
-        GenreTag["GenreTag"]
-        WatchlistBtn["WatchlistButton"]
-        NavHeader["NavigationHeader"]
-    end
-    
-    subgraph Atoms["⚛️ Atoms"]
-        Text["Text"]
-        Button["Button"]
-        Image["Image"]
-        Card["Card"]
-    end
-    
-    SpotlightHome --> SpotlightScroll
-    SpotlightHome --> SearchBar
-    SpotlightScroll --> FilmCarousel
-    FilmCarousel --> FilmCard
-    SearchResults --> FilmCard
-    FilmCard --> FilmPoster
-    FilmCard --> GenreTag
-    FilmCard --> WatchlistBtn
-    
-    FilmDetail --> FilmDetailContent
-    FilmDetailContent --> FilmPoster
-    FilmDetailContent --> GenreTag
-    FilmDetailContent --> WatchlistBtn
-    
-    Watchlist --> WatchlistList
-    WatchlistList --> FilmCard
-    
-    FilmCard --> Card
-    FilmCard --> Text
-    FilmPoster --> Image
-    GenreTag --> Text
-    GenreTag --> Card
-    WatchlistBtn --> Button
-    SearchBar --> Text
-    SearchBar --> Button
-    NavHeader --> Text
-    NavHeader --> Button
-    
-    style Screens fill:#e8f5e9
-    style Organisms fill:#fff3e0
-    style Molecules fill:#f3e5f5
-    style Atoms fill:#e3f2fd
-```
-
-### Feature Flow: Add Film to Watchlist
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant FilmCard as FilmCard<br/>(Molecule)
-    participant WatchlistBtn as WatchlistButton<br/>(Molecule)
-    participant FilmDetail as FilmDetailScreen<br/>(Screen)
-    participant Mutation as useToggleFilmInWatchlistMutation
-    participant WatchlistAPI as watchlistApi<br/>(RTK Query)
-    participant AsyncStorage as AsyncStorage
-    participant Store as Redux Store
-    participant WatchlistScreen as WatchlistScreen
-    
-    User->>FilmCard: Tap Watchlist Button
-    FilmCard->>WatchlistBtn: onPress()
-    WatchlistBtn->>Mutation: trigger(film)
-    Mutation->>WatchlistAPI: Execute Mutation
-    
-    WatchlistAPI->>AsyncStorage: Read Current Watchlist
-    AsyncStorage-->>WatchlistAPI: Current Films Array
-    
-    alt Film Not in Watchlist
-        WatchlistAPI->>WatchlistAPI: Add Film to Array
-    else Film Already in Watchlist
-        WatchlistAPI->>WatchlistAPI: Remove Film from Array
-    end
-    
-    WatchlistAPI->>AsyncStorage: Save Updated Array
-    AsyncStorage-->>WatchlistAPI: Success
-    WatchlistAPI->>Store: Invalidate Tags ['Watchlist']
-    Store->>Store: Trigger Refetch
-    WatchlistAPI-->>Mutation: Return Updated Watchlist
-    Mutation-->>WatchlistBtn: { data: updatedWatchlist }
-    WatchlistBtn->>WatchlistBtn: Update Button State
-    WatchlistBtn-->>User: Visual Feedback (Button State)
-    
-    Store->>WatchlistScreen: Auto Refetch Query
-    WatchlistScreen->>WatchlistScreen: Re-render with Updated List
-    
-    Note over FilmDetail,WatchlistScreen: Both screens stay in sync
-```
 
 ```
 src/
@@ -589,19 +255,13 @@ src/
 │       └── WatchlistItem/
 ├── core/                   # Core utilities and infrastructure
 │   ├── cache/             # Caching layer
-│   │   ├── cache.ts       # Cache implementation
-│   │   └── types.ts       # Cache types
 │   ├── config/            # Configuration
-│   │   └── tmdb.ts        # TMDb API configuration
 │   ├── design/            # Design system
 │   │   └── tokens/        # Design tokens (colors, typography, spacing)
 │   ├── logger/            # Logging utilities
 │   ├── storage/           # Storage abstraction
 │   ├── store/             # Redux store configuration
-│   │   ├── store.ts       # Store setup
-│   │   └── hooks.ts       # Typed hooks
 │   └── utils/             # Utility functions
-│       └── tmdbImages.ts  # TMDb image URL helpers
 ├── navigation/            # Navigation configuration
 │   ├── index.tsx          # Root navigator
 │   └── linking.ts         # Deep linking configuration
@@ -620,226 +280,6 @@ src/
     ├── film.ts
     ├── navigation.ts
     └── screen.ts
-```
-
-## 🔄 Data Flow & State Management
-
-### RTK Query Flow
-
-**API Calls Flow**:
-
-```mermaid
-sequenceDiagram
-    participant Component
-    participant Hook as useGetNowPlayingQuery()
-    participant RTKQuery as RTK Query<br/>Middleware
-    participant Cache as Cache Layer
-    participant API as TMDb API
-    
-    Component->>Hook: Call Hook
-    Hook->>RTKQuery: Check Cache
-    
-    alt Cache Hit
-        RTKQuery-->>Hook: Return Cached Data
-        Hook-->>Component: { data, isLoading: false }
-    else Cache Miss
-        RTKQuery->>Cache: Check AsyncStorage
-        alt AsyncStorage Hit
-            Cache-->>RTKQuery: Return Cached Data
-            RTKQuery->>RTKQuery: Update In-Memory Cache
-            RTKQuery-->>Hook: Return Data
-            Hook-->>Component: { data, isLoading: false }
-        else AsyncStorage Miss
-            RTKQuery->>API: HTTP Request
-            API-->>RTKQuery: Response Data
-            RTKQuery->>Cache: Save to AsyncStorage
-            RTKQuery->>RTKQuery: Update In-Memory Cache
-            RTKQuery-->>Hook: Return Data
-            Hook-->>Component: { data, isLoading: false }
-        end
-    end
-    
-    Component->>Component: Re-render with Data
-```
-
-**Mutations Flow**:
-
-```mermaid
-sequenceDiagram
-    participant Component
-    participant Mutation as useToggleFilmInWatchlistMutation()
-    participant RTKQuery as RTK Query<br/>watchlistApi
-    participant AsyncStorage as AsyncStorage
-    participant Store as Redux Store
-    
-    Component->>Mutation: trigger(film)
-    Mutation->>RTKQuery: Execute Mutation
-    RTKQuery->>AsyncStorage: Read Current Watchlist
-    AsyncStorage-->>RTKQuery: Current Data
-    RTKQuery->>RTKQuery: Toggle Film (Add/Remove)
-    RTKQuery->>AsyncStorage: Save Updated Watchlist
-    RTKQuery->>Store: Invalidate Tags ['Watchlist']
-    RTKQuery->>RTKQuery: Refetch Related Queries
-    RTKQuery-->>Mutation: Return Updated Data
-    Mutation-->>Component: { data: updatedWatchlist }
-    Component->>Component: Re-render with Updated Data
-```
-
-### Redux Slice Flow
-
-**UI State Management**:
-
-```mermaid
-stateDiagram-v2
-    [*] --> Idle: Initial State
-    
-    Idle --> Typing: User Types in SearchBar
-    Typing --> Searching: Debounce Complete
-    Searching --> Results: Search Results Available
-    Searching --> Error: Search Failed
-    Results --> Typing: User Modifies Query
-    Results --> Clear: User Clears Search
-    Error --> Typing: Retry Search
-    Clear --> Idle: State Reset
-    
-    note right of Typing
-        dispatch(setSearchQuery('query'))
-        Updates: searchQuery, isSearchActive
-    end note
-    
-    note right of Results
-        useAppSelector(state => 
-            state.spotlightHome.searchQuery)
-        Component Re-renders
-    end note
-```
-
-### Cache Strategy
-
-**Multi-Level Caching Architecture**:
-
-```mermaid
-graph LR
-    Request["API Request"] --> L1["Level 1: RTK Query<br/>In-Memory Cache<br/>(Fast, Temporary)"]
-    L1 -->|Cache Miss| L2["Level 2: AsyncStorage<br/>Persistent Cache<br/>(Slower, Persistent)"]
-    L2 -->|Cache Miss| API["TMDb API<br/>(Network Request)"]
-    API -->|Response| L2
-    L2 -->|Update| L1
-    L1 -->|Return| Request
-    
-    L2 -.->|API Failure| Fallback["Client-Side Search<br/>(Cached Data)"]
-    Fallback -->|Results| L2
-    
-    style L1 fill:#e3f2fd
-    style L2 fill:#f3e5f5
-    style API fill:#fff3e0
-    style Fallback fill:#ffebee
-```
-
-### Application State Management
-
-**State Flow Diagram**:
-
-```mermaid
-stateDiagram-v2
-    [*] --> Initial: App Launch
-    
-    Initial --> Loading: Fetch Data
-    Loading --> Success: Data Loaded
-    Loading --> Error: Request Failed
-    
-    Success --> Refreshing: User Pulls to Refresh
-    Success --> Searching: User Searches
-    Success --> Navigating: User Navigates
-    
-    Refreshing --> Success: Refresh Complete
-    Refreshing --> Error: Refresh Failed
-    
-    Searching --> SearchResults: Results Found
-    Searching --> SearchEmpty: No Results
-    SearchResults --> Success: Clear Search
-    SearchEmpty --> Success: Clear Search
-    
-    Navigating --> DetailLoading: Load Film Details
-    DetailLoading --> DetailSuccess: Details Loaded
-    DetailLoading --> DetailError: Details Failed
-    DetailSuccess --> Success: Navigate Back
-    DetailError --> Success: Navigate Back
-    
-    Error --> Loading: Retry
-    DetailError --> DetailLoading: Retry
-    
-    note right of Loading
-        RTK Query: isLoading = true
-        Component: Shows Skeleton
-    end note
-    
-    note right of Success
-        RTK Query: { data, isLoading: false }
-        Component: Renders Content
-    end note
-    
-    note right of Error
-        RTK Query: { error, isLoading: false }
-        Component: Shows ErrorState
-    end note
-```
-
-### RTK Query Endpoints Architecture
-
-```mermaid
-graph TB
-    subgraph TMDBAPI["TMDb API (tmdbApi)"]
-        NowPlaying["getNowPlaying<br/>Query"]
-        Popular["getPopular<br/>Query"]
-        FilmDetails["getFilmDetails<br/>Query"]
-        SearchMovies["searchMovies<br/>Query"]
-    end
-    
-    subgraph WatchlistAPI["Watchlist API (watchlistApi)"]
-        GetWatchlist["getWatchlist<br/>Query"]
-        AddFilm["addFilmToWatchlist<br/>Mutation"]
-        RemoveFilm["removeFilmFromWatchlist<br/>Mutation"]
-        ToggleFilm["toggleFilmInWatchlist<br/>Mutation"]
-    end
-    
-    subgraph ReduxSlices["Redux Slices"]
-        SpotlightHome["spotlightHomeSlice<br/>(searchQuery, isSearchActive)"]
-    end
-    
-    subgraph Components["Components"]
-        SpotlightScreen["SpotlightHomeScreen"]
-        FilmDetailScreen["FilmDetailScreen"]
-        WatchlistScreen["WatchlistScreen"]
-        SearchBar["SearchBarContainer"]
-    end
-    
-    SpotlightScreen --> NowPlaying
-    SpotlightScreen --> Popular
-    FilmDetailScreen --> FilmDetails
-    SearchBar --> SearchMovies
-    SearchBar --> SpotlightHome
-    
-    WatchlistScreen --> GetWatchlist
-    FilmDetailScreen --> ToggleFilm
-    WatchlistScreen --> RemoveFilm
-    
-    NowPlaying --> TMDB["TMDb API<br/>(External)"]
-    Popular --> TMDB
-    FilmDetails --> TMDB
-    SearchMovies --> TMDB
-    
-    GetWatchlist --> Storage["AsyncStorage<br/>(Local)"]
-    AddFilm --> Storage
-    RemoveFilm --> Storage
-    ToggleFilm --> Storage
-    
-    style TMDBAPI fill:#e3f2fd
-    style WatchlistAPI fill:#f3e5f5
-    style ReduxSlices fill:#fff3e0
-    style Components fill:#e8f5e9
-    style TMDB fill:#ffebee
-    style Storage fill:#fce4ec
 ```
 
 ## 🛠️ Technology Stack
