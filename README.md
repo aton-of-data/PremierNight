@@ -6,6 +6,10 @@ A premium React Native application for discovering and curating films for privat
 
 Premiere Night is a sophisticated mobile application that enables users to discover films, explore detailed information, and maintain a personalized watchlist. The app integrates with The Movie Database (TMDb) API to provide real-time film data, featuring a luxury minimalist design inspired by Apple and MyTheresa aesthetics.
 
+### Demo
+
+![Premiere Night Demo](./demo.gif)
+
 ### Core Concept
 
 The application serves as a premium film discovery platform where users can:
