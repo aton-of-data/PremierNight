@@ -154,6 +154,82 @@ The app uses a centralized design system with tokens:
 - **Refinement**: Subtle animations and premium color palette
 - **Breathability**: Ample whitespace and clear visual hierarchy
 
+### Component Lifecycle & State Rendering
+
+Components follow a consistent lifecycle pattern based on RTK Query states. Each screen conditionally renders different subcomponents based on data loading, error, and success states:
+
+```mermaid
+graph TB
+    subgraph SpotlightHome["📱 SpotlightHomeScreen"]
+        SH_Init[Initial Load] --> SH_Check{Check RTK Query State}
+        SH_Check -->|isLoading| SH_Pending[SpotlightPendingState<br/>Skeleton Loaders]
+        SH_Check -->|isError| SH_Error[SpotlightErrorState<br/>Error + Retry Button]
+        SH_Check -->|Success| SH_Success[SpotlightScrollView]
+        SH_Error -->|Retry| SH_Pending
+        SH_Pending -->|Data Loaded| SH_Success
+        SH_Success --> SH_Carousels[SpotlightCarousels]
+        SH_Carousels --> SH_NowPlaying[NowPlayingCarousel]
+        SH_Carousels --> SH_Popular[PopularCarousel]
+        SH_NowPlaying --> SH_FilmCard[FilmCard]
+        SH_Popular --> SH_FilmCard
+        SH_FilmCard --> SH_SubComponents[FilmPoster<br/>GenreTag<br/>WatchlistButton]
+    end
+    
+    subgraph FilmDetail["🎬 FilmDetailScreen"]
+        FD_Init[Navigation] --> FD_Check{Check RTK Query State}
+        FD_Check -->|isLoading| FD_Pending[FilmDetailPendingState<br/>Skeleton Loader]
+        FD_Check -->|isError| FD_Error[FilmDetailErrorState<br/>Error + Retry Button]
+        FD_Check -->|Success| FD_Success[FilmDetailContent]
+        FD_Error -->|Retry| FD_Pending
+        FD_Pending -->|Data Loaded| FD_Success
+        FD_Success --> FD_Header[FilmHeader]
+        FD_Success --> FD_Synopsis[FilmSynopsis]
+        FD_Success --> FD_WatchlistBtn[WatchlistButton]
+        FD_Header --> FD_HeaderSub[FilmPoster<br/>GenreTag]
+    end
+    
+    subgraph Watchlist["⭐ WatchlistScreen"]
+        WL_Init[Initial Load] --> WL_Check{Check RTK Query State}
+        WL_Check -->|isLoading| WL_Pending[WatchlistPendingState<br/>Skeleton Loader]
+        WL_Check -->|isError| WL_Error[WatchlistErrorState<br/>Error + Retry Button]
+        WL_Check -->|Empty| WL_Empty[WatchlistEmptyState<br/>Empty Message]
+        WL_Check -->|Success| WL_Success[WatchlistList]
+        WL_Error -->|Retry| WL_Pending
+        WL_Pending -->|Data Loaded| WL_Success
+        WL_Success --> WL_Header[WatchlistHeader]
+        WL_Success --> WL_Items[WatchlistItem<br/>For each film]
+        WL_Items --> WL_FilmCard[FilmCard]
+        WL_FilmCard --> WL_SubComponents[FilmPoster<br/>GenreTag<br/>WatchlistButton]
+    end
+    
+    SH_FilmCard -.->|Navigate| FilmDetail
+    WL_FilmCard -.->|Navigate| FilmDetail
+    
+    style SH_Pending fill:#fff3e0
+    style SH_Error fill:#ffebee
+    style SH_Success fill:#e8f5e9
+    style FD_Pending fill:#fff3e0
+    style FD_Error fill:#ffebee
+    style FD_Success fill:#e8f5e9
+    style WL_Pending fill:#fff3e0
+    style WL_Error fill:#ffebee
+    style WL_Empty fill:#f3e5f5
+    style WL_Success fill:#e8f5e9
+```
+
+**State Rendering Logic**:
+
+- **Pending State**: Renders skeleton loaders (`*PendingState` organisms)
+- **Error State**: Renders error components with retry (`*ErrorState` organisms)
+- **Empty State**: Renders empty state components (`WatchlistEmptyState`)
+- **Success State**: Renders content components with data (`*Content`, `*List`, `*Carousel` organisms)
+
+**Component Hierarchy in Success State**:
+
+1. **SpotlightHomeScreen** → `SpotlightScrollView` → `SpotlightCarousels` → `FilmCarousel` → `FilmCard` → `FilmPoster`, `GenreTag`, `WatchlistButton`
+2. **FilmDetailScreen** → `FilmDetailContent` → `FilmHeader` (with `FilmPoster`, `GenreTag`), `FilmSynopsis`, `WatchlistButton`
+3. **WatchlistScreen** → `WatchlistList` → `WatchlistHeader`, `WatchlistItem` → `FilmCard` → `FilmPoster`, `GenreTag`, `WatchlistButton`
+
 ## 🔧 Technical Architecture
 
 ### State Management: Redux Toolkit + RTK Query
